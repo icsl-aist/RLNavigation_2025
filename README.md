@@ -112,17 +112,22 @@ Gazebo 上に TurtleBot3 が表示されれば、環境構築は完了。
 
 ## 11. 強化学習（DQN）実行手順
 
-### 11.1 学習用 Gazebo 環境起動（Stage 1）
+### 11.1 ターミナル1：Gazeboシミュレーション起動
 
-    ros2 launch turtlebot3_gazebo turtlebot3_stage_1.launch.py
+    ros2 launch turtlebot3_gazebo turtlebot3_dqn_stage1.launch.py
 
-### 11.2 学習ノード起動
+### 11.2 ターミナル2：Gazebo環境ノード
 
-    ros2 launch turtlebot3_machine_learning turtlebot3_dqn_stage_1.launch.py
+    ros2 run turtlebot3_dqn dqn_gazebo 1
 
-### 11.3 学習結果の可視化（任意）
+### 11.3 ターミナル3：DQN環境ノード
 
-    ros2 launch turtlebot3_machine_learning result_graph.launch.py
+    ros2 run turtlebot3_dqn dqn_environment
+
+### 11.3 ターミナル4：DQNエージェントノード
+
+    ros2 run turtlebot3_dqn dqn_agent 1
+    
 
 ---
 
