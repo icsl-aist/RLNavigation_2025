@@ -98,7 +98,11 @@ ROS 環境を有効化する。
 
 ## 9. Python 依存パッケージ
 
-    pip3 install --upgrade numpy==1.26.4 scipy==1.10.1 tensorflow==2.19.0 keras==3.9.2 pyqtgraph
+Ubuntu 22.04 (Python 3.10) 環境における推奨バージョンをインストールする。
+※ TensorFlow は 2.15.0 を使用（Keras は同梱版を使用するため個別インストール不要）。
+
+    pip3 install --upgrade pip
+    pip3 install numpy==1.26.4 tensorflow==2.15.0 pyqtgraph
 
 ---
 
@@ -107,31 +111,26 @@ ROS 環境を有効化する。
     ros2 launch turtlebot3_gazebo empty_world.launch.py
 
 Gazebo 上に TurtleBot3 が表示されれば、環境構築は完了。
+確認後、Ctrl+C で終了する。
 
 ---
 
 ## 11. 強化学習（DQN）実行手順
-以下の4つのターミナルを個別に開き、順にコマンドを実行して学習を開始します．
-### 11.1 ターミナル1：Gazeboシミュレーション起動
-Gazebo上にステージ1のマップを展開します
-    
+
+ROS 2 環境では、シミュレーション環境とエージェントノードの2つを起動して学習を行う。
+
+### 1. ターミナル1：Gazeboシミュレーション起動
+DQN用のステージ1を起動する。
+
     ros2 launch turtlebot3_gazebo turtlebot3_dqn_stage1.launch.py
 
-### 11.2 ターミナル2：Gazebo環境ノード
-Gazeboとの通信を行うノードを起動します（引数 1 はステージ番号）。
+### 2. ターミナル2：DQNエージェントノード
+強化学習アルゴリズムを実行するノードを起動し、学習を開始する。
+（ROS 2 版パッケージでは、環境処理とエージェント処理が統合されている、あるいはトピック経由で連携するため、以下を実行するだけでよい）
 
-    ros2 run turtlebot3_dqn dqn_gazebo 1
+    ros2 run turtlebot3_dqn dqn_agent
 
-### 11.3 ターミナル3：DQN環境ノード
-強化学習の環境定義（状態・報酬計算など）を担うノードを起動します。
-
-    ros2 run turtlebot3_dqn dqn_environment
-
-### 11.3 ターミナル4：DQNエージェントノード
-DQNアルゴリズムを実行するエージェントノードを起動し、学習を開始します（引数 1 はステージ番号）。
-
-    ros2 run turtlebot3_dqn dqn_agent 1
-    
+※ 学習の進捗グラフ（PyQtGraph）が表示され、ロボットが動き出せば成功。
 
 ---
 
@@ -139,7 +138,7 @@ DQNアルゴリズムを実行するエージェントノードを起動し、�
 
 - 本リポジトリは **シミュレーション環境での学習実行**を目的とする  
 - 実機適用時には別途 TurtleBot3 実機設定が必要  
-- PPO 等の独自強化学習手法を導入する場合は、Python 仮想環境での管理を推奨する  
+- PPO 等の独自強化学習手法を導入する場合は、Python 仮想環境（venv/conda）での管理を推奨する  
 
 ---
 
