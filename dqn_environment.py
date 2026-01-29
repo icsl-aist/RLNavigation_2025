@@ -376,24 +376,6 @@ class RLEnvironment(Node):
         # 6. 総報酬計算
         reward = self.distance_reward + self.yaw_reward + self.obstacle_reward + self.terminal_reward
 
-        # ---- ログ出力（修正箇所） ----
-        # log_message = (
-        #     f"==========================================================\n"
-        #     f"[Step {self.local_step:04d}] Total Reward: {reward:+.3f}\n"
-        #     f"----------------------------------------------------------\n"
-        #     f"📏 距離報酬（Distance Reward）: {self.distance_reward:+.3f}\n"
-        #     f"   - 距離変化 ({distance_diff:+.4f}) * 70.0\n"
-        #     f"📐 角度報酬（Angular Reward）: {self.yaw_reward:+.3f}\n"
-        #     f"   - 角度 Cos(θ) ({math.cos(self.goal_angle):+.4f}) * 2.0\n"
-        #     f"💥 障害物ペナルティ（Obstacle Penalty）: {self.obstacle_reward:+.3f}\n"
-        #     f"   - 距離 < 0.40m の合計差分に比例\n"
-        #     f"🏁 終了時報酬（Terminal Bonus/Penalty）: {self.terminal_reward:+.3f}\n"
-        #     f"   - 成功: +{self.terminal_reward:+.3f}（速いほど大）, 失敗: {self.terminal_reward:+.3f}（遅いほど重い）\n"
-        #     f"=========================================================="
-        # )
-        # self.get_logger().info(log_message)
-
-
         # --- 7. 前回距離の更新 ---
         self.prev_distance = distance_to_goal
 

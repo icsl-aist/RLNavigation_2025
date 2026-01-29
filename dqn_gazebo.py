@@ -254,7 +254,7 @@ class GazeboInterface(Node):
         return response
 
     def generate_goal_pose(self):
-
+        # ステージ番号を指定して学習・テストをしてください
         if self.stage == 4:
             # --- 段階的に範囲拡大（最大到達後は最大で固定）---
             self._gen_count = getattr(self, "_gen_count", 0) + 1  # 呼ばれた回数を保持
@@ -277,7 +277,7 @@ class GazeboInterface(Node):
 
         # 環境2におけるテスト座標
         elif self.stage == 1:
-            # 5つの座標をすべて1つのリストにまとめます
+            
             goal_pose_list = [
                 [1.0, 1.0],
                 [1.5, -1.5],
@@ -292,7 +292,6 @@ class GazeboInterface(Node):
             while True:
                 rand_index = random.randint(0, list_size - 1)
                 
-                # self.last_goal_index は __init__ で -1 に初期化されている前提です
                 if rand_index != self.last_goal_index:
                     break
             
@@ -305,7 +304,7 @@ class GazeboInterface(Node):
 
         # 環境1におけるテスト座標
         elif self.stage == 4:
-            # 5つの座標をすべて1つのリストにまとめます
+            
             goal_pose_list = [
                 [-1.0, 1.0],
                 [1.0, 1.0],
@@ -320,7 +319,6 @@ class GazeboInterface(Node):
             while True:
                 rand_index = random.randint(0, list_size - 1)
                 
-                # self.last_goal_index は __init__ で -1 に初期化されている前提です
                 if rand_index != self.last_goal_index:
                     break
             
@@ -389,8 +387,6 @@ class GazeboInterface(Node):
         elif self.stage == 4:
             # --- 新規ステージ: ランダム生成 + 壁際およびカスタム障害物際の除外 ---
             
-            # 1. パラメータ定義
-            # 部屋の境界線が不明なため、ランダム範囲を広く取り、除外で対応します
             MAX_COORD = 20 # ランダム生成範囲 [-2.0m, +2.0m] (通常 Gazebo の部屋サイズに合わせる)
             ROOM_BOUNDARY = 1.95 # 部屋の物理的な境界（マージン計算用）
             
@@ -424,8 +420,6 @@ class GazeboInterface(Node):
                     # ゴール候補点 (x, y) から障害物中心までの距離
                     distance = math.hypot(x - ex_x, y - ex_y) 
                     
-                    # 障害物自体の幅（0.05m〜1.0m）があるため、距離チェックのみでは不十分な場合があるが、
-                    # ここでは中心からの安全半径 EXCLUDE_RADIUS を使用する
                     if distance < EXCLUDE_RADIUS:
                         is_safe = False
                         break
@@ -437,8 +431,6 @@ class GazeboInterface(Node):
             self.entity_pose_y = y
 
         else:
-            # その他のステージ (例: 1～3): 従来通りランダムにゴール生成
-            # ★ 修正: float()で明示的な型変換を追加
             self.entity_pose_x = float(random.randrange(-18, 18) / 10)
             self.entity_pose_y = float(random.randrange(-18, 18) / 10)
 
@@ -461,7 +453,7 @@ if __name__ == '__main__':
 
 
 
-            # if self.stage == 1:
+        # if self.stage == 1:
         #     # --- 段階的に範囲拡大（最大到達後は最大で固定）---
         #     self._gen_count = getattr(self, "_gen_count", 0) + 1  # 呼ばれた回数を保持
         #     batch = 40          # 何回で更新
