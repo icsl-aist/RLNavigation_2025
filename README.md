@@ -36,16 +36,29 @@ https://emanual.robotis.com/docs/en/platform/turtlebot3/machine_learning/
 
 ## 3. ROS 2 Humble インストール
 
-Gazebo および RViz を含む desktop 版を使用する。
+Ubuntu Universeリポジトリの有効化
 
-    sudo apt install -y ros-humble-desktop
-    sudo apt install -y ros-dev-tools python3-colcon-common-extensions
+    sudo apt install software-properties-common
+    sudo add-apt-repository universe
+    
+APTソースリストの設定
 
-ROS 環境を有効化する。
+    sudo apt update && sudo apt install curl -y
+    export ROS_APT_SOURCE_VERSION=$(curl -s [https://api.github.com/repos/ros-infrastructure/ros-apt-source/releases/latest](https://api.github.com/repos/ros-infrastructure/ros-apt-source/releases/latest) | grep -F "tag_name" | awk -F\" '{print $4}')
+    curl -L -o /tmp/ros2-apt-source.deb "[https://github.com/ros-infrastructure/ros-apt-source/releases/download/$](https://github.com/ros-infrastructure/ros-apt-source/releases/download/$){ROS_APT_SOURCE_VERSION}/ros2-apt-source_${ROS_APT_SOURCE_VERSION}.$(. /etc/os-release && echo ${UBUNTU_CODENAME:-${VERSION_CODENAME}})_all.deb"
+    sudo dpkg -i /tmp/ros2-apt-source.deb
 
+ROS2パッケージ「humble」のインストール
+
+    sudo apt update
+    sudo apt upgrade
+    sudo apt install ros-humble-desktop
+    sudo apt install ros-humble-ros-base
+    sudo apt install ros-dev-tools
+
+インストール完了後、ROS 2 環境を読み込む設定を追加する
     echo "source /opt/ros/humble/setup.bash" >> ~/.bashrc
     source ~/.bashrc
-
 ---
 
 ## 4. TurtleBot3 ワークスペース構築
