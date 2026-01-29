@@ -66,10 +66,19 @@ ROS 環境を有効化する。
 
 ## 5. TurtleBot3 Machine Learning パッケージ取得
 
-公式手順に従い、TurtleBot3 関連パッケージ取得後に Machine Learning を追加する。
+実験の目的に応じて、以下の 【パターンA】 または 【パターンB】 のいずれかを選択してリポジトリを取得する．
+
+【パターンA】 公式 DQN (Deep Q-Network) を使用する場合
+ROBOTIS公式の強化学習パッケージ（Humbleブランチ）を使用する。
 
     cd ~/turtlebot3_ws/src
     git clone -b humble-devel https://github.com/ROBOTIS-GIT/turtlebot3_machine_learning.git
+
+【パターンB】 自作 PPO (Proximal Policy Optimization) を使用する場合
+公式DQNをベースに、PPOへ変更・拡張した独自リポジトリを使用する。
+
+    cd ~/turtlebot3_ws/src
+    git clone -b humble-devel https://github.com/ROBOTIS-GIT/turtlebot3_machine_learning.git](https://github.com/icsl-aist/RLNavigation_2025
 
 ---
 
