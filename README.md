@@ -1,168 +1,314 @@
-# RLNavigation_2025
-事前地図を必要としない自律移動ロボットにおける深層強化学習の比較評価とカリキュラム学習の効果検証
+# TurtleBot3 Machine Learning 環境構築手順書
+TurtleBot3 の機械学習（強化学習: DQN）環境を **Ubuntu 22.04 + ROS 2 Humble + Gazebo** でセットアップし、学習まで実行できる状態にするための手順書です。
 
-# TurtleBot3 Reinforcement Learning Environment
-*(ROS 2 Humble / Ubuntu 22.04)*
-
-本リポジトリは、ROBOTIS 公式 eManual **TurtleBot3 Machine Learning** に基づき構築した、  
-TurtleBot3 のシミュレーション環境における **強化学習（Reinforcement Learning）実行環境**である。
-
-本 README では、**何も入っていない Ubuntu 22.04 環境から、学習実行まで**の手順を示す。
-
-公式資料：  
-https://emanual.robotis.com/docs/en/platform/turtlebot3/machine_learning/
+> NOTE:
+> - WSL2 の場合、Gazebo のGUI表示に X11/WSLg の設定が必要になることがあります。
+> - 本手順は `~/turtlebot3_ws` を作業ディレクトリとして使用します。
 
 ---
 
-## 1. 動作環境
-
-- OS : Ubuntu 22.04 LTS  
-- ROS : ROS 2 Humble Hawksbill  
-- Python : 3.10  
-- Simulator : Gazebo  
-- Robot Model : TurtleBot3 (burger)
-
----
-
-## 2. システム準備
-
-    sudo apt update
-    sudo apt -y upgrade
-    sudo apt install -y software-properties-common curl git python3-pip
-    sudo add-apt-repository universe
-    sudo apt update
+## 目次
+- [1. ROS 2 のインストール準備（Locale / Universe / apt source）](#1-ros-2-のインストール準備locale--universe--apt-source)
+- [2. ROS 2 Humble のインストール](#2-ros-2-humble-のインストール)
+- [3. ROS 2 / Gazebo 関連パッケージのインストール](#3-ros-2--gazebo-関連パッケージのインストール)
+- [4. Python 機械学習ライブラリのインストール](#4-python-機械学習ライブラリのインストール)
+- [5. TurtleBot3 関連パッケージ取得 & ビルド](#5-turtlebot3-関連パッケージ取得--ビルド)
+- [6. gazebo_ros_pkgs（必要な場合のみ）](#6-gazebo_ros_pkgs必要な場合のみ)
+- [7. 環境変数の設定](#7-環境変数の設定)
+- [8. TurtleBot3 モデル設定と起動確認](#8-turtlebot3-モデル設定と起動確認)
+- [9. DQN ステージ起動（Gazebo）](#9-dqn-ステージ起動gazebo)
+- [10. 学習開始（複数ターミナル）](#10-学習開始複数ターミナル)
+- [11. 学習状況の可視化（action_graph / result_graph）](#11-学習状況の可視化action_graph--result_graph)
+- [12. 動的物体が動かないとき（libobstacles.so のトラブルシュート）](#12-動的物体が動かないときlibobstaclesso-のトラブルシュート)
 
 ---
 
-## 3. ROS2標準パッケージのインストール
-以下の手順で、ROS2標準パッケージをインストールして、ROS2環境を構築してください。
+## 1. ROS 2 のインストール準備（Locale / Universe / apt source）
 
-ロケールのセットアップ
+### 1.1 Locale を UTF-8 に設定
+```bash
+locale # check for UTF-8
+sudo apt update && sudo apt install -y locales
+sudo locale-gen ja_JP ja_JP.UTF-8
+sudo update-locale LC_ALL=ja_JP.UTF-8 LANG=ja_JP.UTF-8
+export LANG=ja_JP.UTF-8
+locale # verify settings
+```
 
-    locale  # check for UTF-8
-    sudo apt update && sudo apt install locales
-    sudo locale-gen ja_JP ja_JP.UTF-8
-    sudo update-locale LC_ALL=ja_JP.UTF-8 LANG=ja_JP.UTF-8
-    export LANG=ja_JP.UTF-8
-    locale  # verify settings
-    
-Ubuntu Universeリポジトリの有効化
+### 1.2 Ubuntu Universe リポジトリ有効化
+```bash
+sudo apt install -y software-properties-common
+sudo add-apt-repository universe
+```
 
-    sudo apt install software-properties-common
-    sudo add-apt-repository universe
-    
-APTソースリストの設定
+### 1.3 ROS 2 の APT ソース追加
+```bash
+sudo apt update && sudo apt install -y curl
 
-    sudo apt update && sudo apt install curl -y
-    export ROS_APT_SOURCE_VERSION=$(curl -s [https://api.github.com/repos/ros-infrastructure/ros-apt-source/releases/latest](https://api.github.com/repos/ros-infrastructure/ros-apt-source/releases/latest) | grep -F "tag_name" | awk -F\" '{print $4}')
-    curl -L -o /tmp/ros2-apt-source.deb "[https://github.com/ros-infrastructure/ros-apt-source/releases/download/$](https://github.com/ros-infrastructure/ros-apt-source/releases/download/$){ROS_APT_SOURCE_VERSION}/ros2-apt-source_${ROS_APT_SOURCE_VERSION}.$(. /etc/os-release && echo ${UBUNTU_CODENAME:-${VERSION_CODENAME}})_all.deb"
-    sudo dpkg -i /tmp/ros2-apt-source.deb
+export ROS_APT_SOURCE_VERSION=$(
+  curl -s https://api.github.com/repos/ros-infrastructure/ros-apt-source/releases/latest \
+  | grep -F "tag_name" | awk -F\" '{print $4}'
+)
 
-ROS2パッケージ「humble」のインストール
+curl -L -o /tmp/ros2-apt-source.deb \
+  "https://github.com/ros-infrastructure/ros-apt-source/releases/download/${ROS_APT_SOURCE_VERSION}/ros2-apt-source_${ROS_APT_SOURCE_VERSION}.$(. /etc/os-release && echo ${UBUNTU_CODENAME:-${VERSION_CODENAME}})_all.deb"
 
-    sudo apt update
-    sudo apt upgrade
-    sudo apt install ros-humble-desktop
-    sudo apt install ros-humble-ros-base
-    sudo apt install ros-dev-tools
-
-インストール完了後、ROS 2 環境を読み込む設定を追加する
-    echo "source /opt/ros/humble/setup.bash" >> ~/.bashrc
-    source ~/.bashrc
----
-
-## 4. TurtleBot3 ワークスペース構築
-
-### 4.1 ワークスペース作成
-
-    mkdir -p ~/turtlebot3_ws/src
-    cd ~/turtlebot3_ws/src
-
-### 4.2 TurtleBot3 関連パッケージ取得
-
-    git clone -b humble https://github.com/ROBOTIS-GIT/DynamixelSDK.git
-    git clone -b humble https://github.com/ROBOTIS-GIT/turtlebot3_msgs.git
-    git clone -b humble https://github.com/ROBOTIS-GIT/turtlebot3.git
-    git clone -b humble https://github.com/ROBOTIS-GIT/turtlebot3_simulations.git
+sudo dpkg -i /tmp/ros2-apt-source.deb
+```
 
 ---
 
-## 5. TurtleBot3 Machine Learning パッケージ取得
+## 2. ROS 2 Humble のインストール
+```bash
+sudo apt update
+sudo apt upgrade -y
 
-実験の目的に応じて、以下の 【パターンA】 または 【パターンB】 のいずれかを選択してリポジトリを取得する．
-
-【パターンA】 公式 DQN (Deep Q-Network) を使用する場合
-ROBOTIS公式の強化学習パッケージ（Humbleブランチ）を使用する。
-
-    cd ~/turtlebot3_ws/src
-    git clone -b humble-devel https://github.com/ROBOTIS-GIT/turtlebot3_machine_learning.git
-
-【パターンB】 自作 PPO (Proximal Policy Optimization) を使用する場合
-公式DQNをベースに、PPOへ変更・拡張した独自リポジトリを使用する。
-
-    cd ~/turtlebot3_ws/src
-    git clone -b humble-devel https://github.com/ROBOTIS-GIT/turtlebot3_machine_learning.git](https://github.com/icsl-aist/RLNavigation_2025
+sudo apt install -y ros-humble-desktop
+sudo apt install -y ros-humble-ros-base
+sudo apt install -y ros-dev-tools
+```
 
 ---
 
-## 6. ビルド
-
-    cd ~/turtlebot3_ws
-    colcon build --symlink-install
-    echo "source ~/turtlebot3_ws/install/setup.bash" >> ~/.bashrc
-    source ~/.bashrc
+## 3. ROS 2 / Gazebo 関連パッケージのインストール
+```bash
+sudo apt install -y ros-humble-gazebo-*
+```
 
 ---
 
-## 7. Gazebo 関連パッケージ
+## 4. Python 機械学習ライブラリのインストール
 
-    sudo apt install -y ros-humble-gazebo-*
+> NOTE: ここは環境によって依存が崩れやすいので、必要なら venv/conda などで分離推奨。
 
----
-
-## 8. 環境変数設定
-
-    echo "export TURTLEBOT3_MODEL=burger" >> ~/.bashrc
-    echo "export ROS_DOMAIN_ID=30" >> ~/.bashrc
-    source ~/.bashrc
-
----
-
-## 9. Python 依存パッケージ
-
-Ubuntu 22.04 (Python 3.10) 環境における推奨バージョンをインストールする。
-※ TensorFlow は 2.15.0 を使用（Keras は同梱版を使用するため個別インストール不要）。
-
-    pip3 install --upgrade pip
-    pip3 install numpy==1.26.4 tensorflow==2.15.0 pyqtgraph
+```bash
+sudo apt install -y python3-pip
+pip3 install tensorflow==2.11.0
+pip3 install keras==2.11.0
+pip3 install setuptools==58.2.0
+pip3 install numpy==1.23.5
+```
 
 ---
 
-## 10. シミュレーション起動確認
+## 5. TurtleBot3 関連パッケージ取得 & ビルド
 
-    ros2 launch turtlebot3_gazebo empty_world.launch.py
+### 5.1 ワークスペース作成
+```bash
+source /opt/ros/humble/setup.bash
+mkdir -p ~/turtlebot3_ws/src
+cd ~/turtlebot3_ws/src
+```
 
-Gazebo 上に TurtleBot3 が表示されれば、環境構築は完了。
-確認後、Ctrl+C で終了する。
+### 5.2 パッケージ取得
+```bash
+git clone -b humble https://github.com/ROBOTIS-GIT/DynamixelSDK.git
+git clone -b humble https://github.com/ROBOTIS-GIT/turtlebot3_msgs.git
+git clone -b humble https://github.com/ROBOTIS-GIT/turtlebot3.git
+git clone -b humble https://github.com/ROBOTIS-GIT/turtlebot3_simulations.git
+git clone -b humble-devel https://github.com/ROBOTIS-GIT/turtlebot3_machine_learning.git
+```
+
+### 5.3 ビルド
+```bash
+sudo apt install -y python3-colcon-common-extensions
+
+cd ~/turtlebot3_ws
+colcon build --symlink-install
+
+echo 'source ~/turtlebot3_ws/install/setup.bash' >> ~/.bashrc
+source ~/.bashrc
+```
 
 ---
 
-## 11. 強化学習（DQN）実行手順
+## 6. gazebo_ros_pkgs（必要な場合のみ）
 
-ROS 2 環境では、シミュレーション環境とエージェントノードの2つを起動して学習を行う。
+> 公式環境で動作する場合は不要なこともあります。必要になった場合のみ実施してください。
 
-### 1. ターミナル1：Gazeboシミュレーション起動
-DQN用のステージ1を起動する。
+```bash
+cd ~/turtlebot3_ws/src
+git clone -b ros2 https://github.com/ros-simulation/gazebo_ros_pkgs.git
 
-    ros2 launch turtlebot3_gazebo turtlebot3_dqn_stage1.launch.py
+cd ~/turtlebot3_ws
+colcon build --packages-select gazebo_ros_pkgs
+source ~/.bashrc
+```
 
-### 2. ターミナル2：DQNエージェントノード
-強化学習アルゴリズムを実行するノードを起動し、学習を開始する。
-（ROS 2 版パッケージでは、環境処理とエージェント処理が統合されている、あるいはトピック経由で連携するため、以下を実行するだけでよい）
+---
 
-    ros2 run turtlebot3_dqn dqn_agent
+## 7. 環境変数の設定
 
-※ 学習の進捗グラフ（PyQtGraph）が表示され、ロボットが動き出せば成功。
+> `ROS_DOMAIN_ID` は変更しても良い（ネットワーク環境や他ノードと干渉する場合に調整）。
+
+```bash
+echo 'export ROS_DOMAIN_ID=30 #TURTLEBOT3' >> ~/.bashrc
+echo 'source /usr/share/gazebo/setup.sh' >> ~/.bashrc
+echo 'source /opt/ros/humble/setup.bash' >> ~/.bashrc
+
+source ~/.bashrc
+```
+
+---
+
+## 8. TurtleBot3 モデル設定と起動確認
+
+強化学習を行う前に、使用する TurtleBot3 のモデルを設定し、Gazebo で起動できるか確認します。
+
+```bash
+export TURTLEBOT3_MODEL=burger
+echo 'export TURTLEBOT3_MODEL=burger' >> ~/.bashrc
+source ~/.bashrc
+
+ros2 launch turtlebot3_gazebo empty_world.launch.py
+```
+
+---
+
+## 9. DQN ステージ起動（Gazebo）
+
+DQN 用のステージを起動します。
+
+```bash
+ros2 launch turtlebot3_gazebo turtlebot3_dqn_stage1.launch.py
+```
+
+> 💡 Stage番号を変えてもワールドが変わらない場合  
+> - 指定している `.world` ファイルが正しいか  
+> - `turtlebot3_gazebo` が「どのワークスペースのもの」を読んでいるか（`source` の順番）  
+> を確認してください。
+
+---
+
+## 10. 学習開始（複数ターミナル）
+
+DQN 学習は複数ノードを立ち上げて実行します。  
+以下は **Stage1** の例です（Stage番号は必要に応じて変更）。
+
+### Terminal 1：Gazebo（ステージ起動）
+```bash
+ros2 launch turtlebot3_gazebo turtlebot3_dqn_stage1.launch.py
+```
+
+### Terminal 2：Gazebo 環境ノード
+```bash
+ros2 run turtlebot3_dqn dqn_gazebo 1
+```
+
+### Terminal 3：DQN 環境ノード
+```bash
+ros2 run turtlebot3_dqn dqn_environment
+```
+
+### Terminal 4：DQN エージェントノード
+（環境によってコマンドが異なる場合があります。リポジトリ内の `turtlebot3_dqn` の README / launch を参照してください。）
+
+---
+
+## 11. 学習状況の可視化（action_graph / result_graph）
+
+### Terminal 5：行動と報酬の確認（アクション / 即時報酬 / 合計報酬）
+```bash
+ros2 run turtlebot3_dqn action_graph
+```
+
+### Terminal 6：学習曲線（Q値最大の平均 + 合計報酬）
+各エピソードの進行に伴う **Q 値の最大値の平均** と **合計報酬（Total Reward）** を、エピソード番号に対して線形プロットします。
+
+```bash
+ros2 run turtlebot3_dqn result_graph
+```
+
+---
+
+## 12. 動的物体が動かないとき（libobstacles.so のトラブルシュート）
+
+### 初期状態の症状
+`ros2 launch turtlebot3_gazebo turtlebot3_dqn_stage3.launch.py` を実行しても、ステージ内の **動的オブジェクト（障害物など）が動かない**。
+
+原因として、以下のプラグインが読み込まれていない可能性があります：
+
+```xml
+<plugin name="obstacles" filename="libobstacles.so"/>
+```
+
+### 依存関係（生成物）の確認
+```bash
+find ~/turtlebot3_ws -name libobstacles.so
+```
+
+#### 結果例
+```
+/home/icsl/turtlebot3_ws/build/turtlebot3_gazebo/libobstacles.so
+```
+
+- `build/` にはあるが `install/` には無い  
+  → **CMake 側に install 指令が無い（または不足）** 可能性が高い。
+
+### まずはビルド生成物を直接参照して動作検証（暫定対応）
+```bash
+export GAZEBO_PLUGIN_PATH="$TB3_WS/build/turtlebot3_gazebo:$GAZEBO_PLUGIN_PATH"
+```
+
+この状態で `ros2 launch ...` を実行し、動的物体が動くか確認します。
+
+---
+
+### 動いた場合：CMake に install ルールを追加（恒久対応）
+
+次のファイルを編集：
+- `~/turtlebot3_ws/src/turtlebot3_simulations/turtlebot3_gazebo/CMakeLists.txt`
+
+**install 欄**に以下を追記：
+
+```cmake
+install(TARGETS
+  obstacles
+  obstacle1
+  obstacle2
+  traffic_light_plugin
+  traffic_bar_plugin
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
+)
+```
+
+#### 念のためのチェックリスト（CMake）
+すでに書かれているはず：
+
+- `find_package(gazebo REQUIRED)`
+- `include_directories(${GAZEBO_INCLUDE_DIRS})`
+- `link_directories(${GAZEBO_LIBRARY_DIRS})`
+- `target_link_libraries(obstacles ${GAZEBO_LIBRARIES})`
+
+### package.xml も確認（依存の明示）
+同じディレクトリの `package.xml` に以下を追加：
+
+```xml
+<build_depend>gazebo_dev</build_depend>
+<exec_depend>gazebo</exec_depend>
+```
+
+### 反映（再ビルド & セットアップ）
+```bash
+cd ~/turtlebot3_ws
+colcon build --symlink-install --packages-select turtlebot3_gazebo --allow-overriding turtlebot3_gazebo
+source install/setup.bash
+```
+
+インストール先に入ったか確認：
+```bash
+find install/turtlebot3_gazebo -maxdepth 5 -name 'libobstacles.so' -print
+```
+
+最後に起動：
+```bash
+ros2 launch turtlebot3_gazebo turtlebot3_dqn_stage3.launch.py
+```
+
+うまく行かなかった場合は、環境変数の反映漏れ等の可能性もあるので **一度再起動** してから再度試すのも有効です。
+
 
 ---
 
@@ -178,3 +324,6 @@ DQN用のステージ1を起動する。
 
 - ROBOTIS TurtleBot3 Machine Learning  
   https://emanual.robotis.com/docs/en/platform/turtlebot3/machine_learning/
+
+
+
