@@ -34,8 +34,18 @@ https://emanual.robotis.com/docs/en/platform/turtlebot3/machine_learning/
 
 ---
 
-## 3. ROS 2 Humble インストール
+## 3. ROS2標準パッケージのインストール
+以下の手順で、ROS2標準パッケージをインストールして、ROS2環境を構築してください。
 
+ロケールのセットアップ
+
+    $ locale  # check for UTF-8
+    $ sudo apt update && sudo apt install locales
+    $ sudo locale-gen ja_JP ja_JP.UTF-8
+    $ sudo update-locale LC_ALL=ja_JP.UTF-8 LANG=ja_JP.UTF-8
+    $ export LANG=ja_JP.UTF-8
+    $ locale  # verify settings
+    
 Ubuntu Universeリポジトリの有効化
 
     sudo apt install software-properties-common
