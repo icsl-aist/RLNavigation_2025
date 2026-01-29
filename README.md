@@ -311,8 +311,10 @@ ros2 launch turtlebot3_gazebo turtlebot3_dqn_stage3.launch.py
 
 
 ---
+## 13. PPOプログラム詳細
+## 14. 使用したステージ詳細
 
-## 13. 備考
+## 15. 備考
 
 - 本リポジトリは **シミュレーション環境での学習実行**を目的とする  
 - 実機適用時には別途 TurtleBot3 実機設定が必要  
@@ -320,7 +322,7 @@ ros2 launch turtlebot3_gazebo turtlebot3_dqn_stage3.launch.py
 
 ---
 
-## 14. 参考資料
+## 16. 参考資料
 
 - ROBOTIS TurtleBot3 Machine Learning  
   https://emanual.robotis.com/docs/en/platform/turtlebot3/machine_learning/
