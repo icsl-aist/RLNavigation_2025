@@ -227,6 +227,38 @@ ros2 run turtlebot3_dqn result_graph
 ---
 ## 12. Lidarの本数設定
 
+- 対象ファイル  
+  `/turtlebot3_simulations/turtlebot3_gazebo/models/turtlebot3_burger/model.sdf`
+
+必要に応じて **LiDAR のサンプル数を変更（360 → 48）**する。
+
+---
+
+### 概要
+
+状態は環境の観測値であり，ロボットの現在の状況を表す。  
+本システムでは，状態ベクトルの次元数は **26 次元**で構成されており，
+
+- LiDAR（LDS）値：24 次元  
+- ゴールまでの距離：1 次元  
+- ゴールまでの角度：1 次元  
+
+を含む。
+
+LiDAR 値は **前方 180 度の範囲**を使用するため，  
+360 度全体では **48 本の LiDAR サンプル**が必要となる。
+
+TurtleBot3 の LDS（LiDAR Distance Sensor）のデフォルト設定は  
+**360 本**となっているため，以下のファイルを編集して調整する。
+
+---
+
+### 設定ファイルの編集
+
+```bash
+gedit ~/turtlebot3_ws/src/turtlebot3_simulations/turtlebot3_gazebo/models/turtlebot3_burger/model.sdf
+
+
 ## 13. 動的物体が動かないとき（libobstacles.so のトラブルシュート）
 
 ### 初期状態の症状
