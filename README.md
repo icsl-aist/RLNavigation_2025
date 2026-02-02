@@ -19,7 +19,12 @@ TurtleBot3 の機械学習（強化学習: DQN）環境を **Ubuntu 22.04 + ROS 
 - [9. DQN ステージ起動（Gazebo）](#9-dqn-ステージ起動gazebo)
 - [10. 学習開始（複数ターミナル）](#10-学習開始複数ターミナル)
 - [11. 学習状況の可視化（action_graph / result_graph）](#11-学習状況の可視化action_graph--result_graph)
-- [12. 動的物体が動かないとき（libobstacles.so のトラブルシュート）](#12-動的物体が動かないときlibobstaclesso-のトラブルシュート)
+- [12. Lidarの本数設定](#12-Lidarの本数設定)
+- [13. 動的物体が動かないとき（libobstacles.so のトラブルシュート）](#13-動的物体が動かないときlibobstaclesso-のトラブルシュート)
+- [14. PPOプログラム詳細](#14-ppoプログラム詳細)
+- [15. 使用したステージ詳細](#15-使用したステージ詳細)
+
+
 
 ---
 
@@ -220,8 +225,9 @@ ros2 run turtlebot3_dqn result_graph
 ```
 
 ---
+## 12. Lidarの本数設定（Lidarの本数設定）
 
-## 12. 動的物体が動かないとき（libobstacles.so のトラブルシュート）
+## 13. 動的物体が動かないとき（libobstacles.so のトラブルシュート）
 
 ### 初期状態の症状
 `ros2 launch turtlebot3_gazebo turtlebot3_dqn_stage3.launch.py` を実行しても、ステージ内の **動的オブジェクト（障害物など）が動かない**。
@@ -311,40 +317,7 @@ ros2 launch turtlebot3_gazebo turtlebot3_dqn_stage3.launch.py
 
 
 ---
-## 13. PPOプログラム詳細
-```
-
----
-
-## Obstacle Avoidance Penalty
-
-LiDAR により観測された障害物距離が閾値 `0.35 m` を下回った場合，  
-距離の逆数差分の **三乗** に比例した負の報酬を与える．  
-この設計により，障害物に近づくほど急激にペナルティが増大し，安全距離を保った移動行動が促進される．
-
-```python
-def compute_weighted_obstacle_reward(self):
-
-    if not self.scan_ranges:
-        return 0.0
-
-    ranges = np.array(self.scan_ranges)
-    threshold_dist = 0.35
-    penalty_scale = 0.081
-
-    mask = ranges < threshold_dist
-    if not np.any(mask):
-        return 0.0
-
-    close_points = ranges[mask]
-
-    diffs_inverse = (1.0 / (close_points + 1e-6)) - (1.0 / threshold_dist)
-    penalty_component = diffs_inverse ** 3
-
-    return -np.sum(penalty_component) * penalty_scale
-```
-
----
+## 14. PPOプログラム詳細
 
 ## Reward Function
 
@@ -497,17 +470,7 @@ def train(self, states, actions, old_logps, returns, advantages):
     return actor_loss.item(), critic_loss.item()
 ```
 
----
-
-## Notes
-
-- ROS 2 Humble / Ubuntu 22.04 を想定  
-- TurtleBot3 シミュレーション環境対応  
-- カリキュラム学習への拡張が容易な設計  
-
----
-
-## 14. 使用したステージ詳細
+## 15. 使用したステージ詳細
 
 ## 15. 備考
 
