@@ -225,7 +225,7 @@ ros2 run turtlebot3_dqn result_graph
 ```
 
 ---
-## 12. Lidarの本数設定（Lidarの本数設定）
+## 12. Lidarの本数設定
 
 ## 13. 動的物体が動かないとき（libobstacles.so のトラブルシュート）
 
