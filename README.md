@@ -206,6 +206,9 @@ ros2 run turtlebot3_dqn dqn_environment
 ```
 
 ### Terminal 4：DQN エージェントノード
+```bash
+ros2 run turtlebot3_dqn dqn_agent 1 1000
+```
 （環境によってコマンドが異なる場合があります。リポジトリ内の `turtlebot3_dqn` の README / launch を参照してください。）
 
 ---
