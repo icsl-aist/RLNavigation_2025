@@ -111,7 +111,7 @@ git clone -b humble https://github.com/ROBOTIS-GIT/DynamixelSDK.git
 git clone -b humble https://github.com/ROBOTIS-GIT/turtlebot3_msgs.git
 git clone -b humble https://github.com/ROBOTIS-GIT/turtlebot3.git
 git clone -b humble https://github.com/ROBOTIS-GIT/turtlebot3_simulations.git
-git clone -b humble-devel https://github.com/ROBOTIS-GIT/turtlebot3_machine_learning.git
+git clone -b humble https://github.com/ROBOTIS-GIT/turtlebot3_machine_learning.git
 ```
 
 ### 5.3 ビルド
