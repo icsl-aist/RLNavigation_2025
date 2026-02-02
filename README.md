@@ -472,7 +472,7 @@ def train(self, states, actions, old_logps, returns, advantages):
 
 ## 15. 使用したステージ詳細
 <p align="center">
-  <img src="images/stage1.png" width="32%" alt="Stage 1 : Simple Navigation">
+  <img src="images/stage1.pdf" width="32%" alt="Stage 1 : Simple Navigation">
   <img src="images/stage2.png" width="32%" alt="Stage 2 : Narrow Passage">
   <img src="images/stage3.png" width="32%" alt="Stage 3 : Obstacle Avoidance">
 </p>
