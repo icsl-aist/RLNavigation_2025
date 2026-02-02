@@ -251,14 +251,6 @@ LiDAR 値は **前方 180 度の範囲**を使用するため，
 TurtleBot3 の LDS（LiDAR Distance Sensor）のデフォルト設定は  
 **360 本**となっているため，以下のファイルを編集して調整する。
 
----
-
-### 設定ファイルの編集
-
-```bash
-gedit ~/turtlebot3_ws/src/turtlebot3_simulations/turtlebot3_gazebo/models/turtlebot3_burger/model.sdf
-
-
 ## 13. 動的物体が動かないとき（libobstacles.so のトラブルシュート）
 
 ### 初期状態の症状
