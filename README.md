@@ -19,7 +19,12 @@ TurtleBot3 の機械学習（強化学習: DQN）環境を **Ubuntu 22.04 + ROS 
 - [9. DQN ステージ起動（Gazebo）](#9-dqn-ステージ起動gazebo)
 - [10. 学習開始（複数ターミナル）](#10-学習開始複数ターミナル)
 - [11. 学習状況の可視化（action_graph / result_graph）](#11-学習状況の可視化action_graph--result_graph)
-- [12. 動的物体が動かないとき（libobstacles.so のトラブルシュート）](#12-動的物体が動かないときlibobstaclesso-のトラブルシュート)
+- [12. Lidarの本数設定](#12-Lidarの本数設定)
+- [13. 動的物体が動かないとき（libobstacles.so のトラブルシュート）](#13-動的物体が動かないときlibobstaclesso-のトラブルシュート)
+- [14. PPOプログラム詳細](#14-ppoプログラム詳細)
+- [15. 使用したステージ詳細](#15-使用したステージ詳細)
+
+
 
 ---
 
@@ -220,8 +225,9 @@ ros2 run turtlebot3_dqn result_graph
 ```
 
 ---
+## 12. Lidarの本数設定
 
-## 12. 動的物体が動かないとき（libobstacles.so のトラブルシュート）
+## 13. 動的物体が動かないとき（libobstacles.so のトラブルシュート）
 
 ### 初期状態の症状
 `ros2 launch turtlebot3_gazebo turtlebot3_dqn_stage3.launch.py` を実行しても、ステージ内の **動的オブジェクト（障害物など）が動かない**。
@@ -311,8 +317,171 @@ ros2 launch turtlebot3_gazebo turtlebot3_dqn_stage3.launch.py
 
 
 ---
-## 13. PPOプログラム詳細
-## 14. 使用したステージ詳細
+## 14. PPOプログラム詳細
+
+## Reward Function
+
+総報酬は以下の 3 要素の和として定義される．
+
+1. **Distance Reward**  
+   ゴールに接近した場合のみ正の報酬を与える．後退時の負報酬は局所解を誘発しやすいため，0 にクリッピングする．
+
+2. **Obstacle Penalty**  
+   上記の障害物回避ペナルティを加算する．
+
+3. **Terminal Reward**  
+   - 成功時：最大 `+600`（早く到達するほど高い）  
+   - 失敗時：`-500`
+
+```python
+def calculate_reward(self):
+
+    distance_to_goal = math.sqrt(
+        (self.goal_pose_x - self.robot_pose_x) ** 2 +
+        (self.goal_pose_y - self.robot_pose_y) ** 2
+    )
+
+    if not hasattr(self, 'prev_distance'):
+        self.prev_distance = distance_to_goal
+
+    distance_diff = self.prev_distance - distance_to_goal
+    distance_reward = max(0.0, distance_diff) * 100.0
+
+    obstacle_reward = self.compute_weighted_obstacle_reward()
+
+    terminal_reward = 0.0
+    steps = max(1, getattr(self, "_ep_steps", self.local_step))
+    S = float(self.max_step)
+
+    if self.succeed:
+        scale = max(0.2, 1.0 - (steps - 1) / S)
+        terminal_reward = 600.0 * scale
+    elif self.fail:
+        terminal_reward = -500.0
+
+    self.prev_distance = distance_to_goal
+    return distance_reward + obstacle_reward + terminal_reward
+```
+
+---
+
+## PPO Network Architecture
+
+連続値制御を行うため，Actor は行動分布の平均 μ と標準偏差 σ を出力する．  
+μ は `tanh` 関数により `(-1, 1)` に正規化され，σ は対数空間で学習し指数変換後にクリッピングすることで学習の安定性を確保する．  
+Critic は状態価値関数 \( V(s) \) を推定する．
+
+```python
+class Actor(nn.Module):
+    def __init__(self, state_dim=28, action_dim=2):
+        super().__init__()
+        self.net = nn.Sequential(
+            nn.Linear(state_dim, 256), nn.ReLU(),
+            nn.Linear(256, 128), nn.ReLU(),
+        )
+        self.mu_layer = nn.Linear(128, action_dim)
+        self.log_std = nn.Parameter(torch.zeros(action_dim))
+
+    def forward(self, x):
+        x = self.net(x)
+        mu = torch.tanh(self.mu_layer(x))
+        std = torch.exp(self.log_std).clamp(1e-3, 1.0)
+        return mu, std
+
+
+class Critic(nn.Module):
+    def __init__(self, state_dim=28):
+        super().__init__()
+        self.net = nn.Sequential(
+            nn.Linear(state_dim, 256), nn.ReLU(),
+            nn.Linear(256, 128), nn.ReLU(),
+            nn.Linear(128, 1)
+        )
+
+    def forward(self, x):
+        return self.net(x).squeeze(-1)
+```
+
+---
+
+## GAE (Generalized Advantage Estimation)
+
+アドバンテージ推定には GAE を採用する．  
+TD 誤差を基に，割引率 γ と係数 λ を用いて時間逆順にアドバンテージを計算することで，分散を抑えつつ長期的な報酬構造を反映した学習を実現する．
+
+```python
+def compute_gae(rewards, values, is_last_step_terminal, gamma=0.99, lam=0.95):
+
+    T = len(rewards)
+    advantages = np.zeros(T, dtype=np.float32)
+    last_gae = 0.0
+
+    for t in reversed(range(T)):
+        is_terminal = (t == T - 1) and is_last_step_terminal
+        next_value = 0.0 if is_terminal else values[t + 1]
+
+        delta = rewards[t] + gamma * next_value - values[t]
+        last_gae = delta + gamma * lam * last_gae
+        advantages[t] = last_gae
+
+    returns = advantages + np.asarray(values[:-1], dtype=np.float32)
+    return returns.tolist(), advantages.tolist()
+```
+
+---
+
+## PPO Update Rule
+
+PPO の損失関数は以下の 3 要素から構成される．  
+クリッピングにより急激な方策更新を抑制し，エントロピー正則化により探索性を維持する．
+
+- **Clipped Actor Loss**
+- **Critic Mean Squared Error Loss**
+- **Entropy Regularization**
+
+```python
+def train(self, states, actions, old_logps, returns, advantages):
+
+    mu, std = self.actor(states)
+    dist = torch.distributions.Normal(mu, std)
+
+    logp = dist.log_prob(actions).sum(dim=-1)
+    ratio = torch.exp(logp - old_logps)
+
+    surr1 = ratio * advantages
+    surr2 = torch.clamp(ratio, 1 - self.clip_range, 1 + self.clip_range) * advantages
+
+    actor_loss = -torch.mean(torch.min(surr1, surr2))
+    actor_loss -= self.ent_coef * dist.entropy().mean()
+
+    values = self.critic(states)
+    critic_loss = 0.5 * torch.mean((returns - values) ** 2)
+
+    self.opt_actor.zero_grad()
+    actor_loss.backward()
+    nn.utils.clip_grad_norm_(self.actor.parameters(), 0.5)
+    self.opt_actor.step()
+
+    self.opt_critic.zero_grad()
+    critic_loss.backward()
+    nn.utils.clip_grad_norm_(self.critic.parameters(), 0.5)
+    self.opt_critic.step()
+
+    return actor_loss.item(), critic_loss.item()
+```
+
+## 15. 使用したステージ詳細
+<p align="center">
+  <img src="images/stage1.png" width="32%" alt="Stage 1 : Simple Navigation">
+  <img src="images/stage2.png" width="32%" alt="Stage 2 : Narrow Passage">
+  <img src="images/stage3.png" width="32%" alt="Stage 3 : Obstacle Avoidance">
+</p>
+
+<p align="center">
+  <b>Stage 1</b>：障害物なし（壁のみ）　
+  <b>Stage 2</b>：狭路環境　
+  <b>Stage 3</b>：静的障害物回避
+</p>
 
 ## 15. 備考
 
