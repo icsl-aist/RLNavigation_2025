@@ -88,10 +88,7 @@ sudo apt install -y ros-humble-gazebo-*
 
 ```bash
 sudo apt install -y python3-pip
-pip3 install tensorflow==2.11.0
-pip3 install keras==2.11.0
-pip3 install setuptools==58.2.0
-pip3 install numpy==1.23.5
+pip install --upgrade numpy==1.26.4 scipy==1.10.1 tensorflow==2.19.0 keras==3.9.2 pyqtgraph
 ```
 
 ---
