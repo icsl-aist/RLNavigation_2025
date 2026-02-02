@@ -471,6 +471,17 @@ def train(self, states, actions, old_logps, returns, advantages):
 ```
 
 ## 15. 使用したステージ詳細
+<p align="center">
+  <img src="images/stage1.png" width="32%" alt="Stage 1 : Simple Navigation">
+  <img src="images/stage2.png" width="32%" alt="Stage 2 : Narrow Passage">
+  <img src="images/stage3.png" width="32%" alt="Stage 3 : Obstacle Avoidance">
+</p>
+
+<p align="center">
+  <b>Stage 1</b>：障害物なし（壁のみ）　
+  <b>Stage 2</b>：狭路環境　
+  <b>Stage 3</b>：静的障害物回避
+</p>
 
 ## 15. 備考
 
