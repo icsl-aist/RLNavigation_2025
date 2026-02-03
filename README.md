@@ -23,6 +23,9 @@ TurtleBot3 の機械学習（強化学習: DQN）環境を **Ubuntu 22.04 + ROS 
 - [13. 動的物体が動かないとき（libobstacles.so のトラブルシュート）](#13-動的物体が動かないときlibobstaclesso-のトラブルシュート)
 - [14. PPOプログラム詳細](#14-ppoプログラム詳細)
 - [15. 使用したステージ詳細](#15-使用したステージ詳細)
+- [16. PPOの実行手順](#16-PPOの実行手順)
+- [17. 備考](#17-備考)
+- [18. 参考文献](#18-参考文献)
 
 
 
@@ -88,10 +91,7 @@ sudo apt install -y ros-humble-gazebo-*
 
 ```bash
 sudo apt install -y python3-pip
-pip3 install tensorflow==2.11.0
-pip3 install keras==2.11.0
-pip3 install setuptools==58.2.0
-pip3 install numpy==1.23.5
+pip install --upgrade numpy==1.26.4 scipy==1.10.1 tensorflow==2.19.0 keras==3.9.2 pyqtgraph
 ```
 
 ---
@@ -111,7 +111,7 @@ git clone -b humble https://github.com/ROBOTIS-GIT/DynamixelSDK.git
 git clone -b humble https://github.com/ROBOTIS-GIT/turtlebot3_msgs.git
 git clone -b humble https://github.com/ROBOTIS-GIT/turtlebot3.git
 git clone -b humble https://github.com/ROBOTIS-GIT/turtlebot3_simulations.git
-git clone -b humble-devel https://github.com/ROBOTIS-GIT/turtlebot3_machine_learning.git
+git clone -b humble https://github.com/ROBOTIS-GIT/turtlebot3_machine_learning.git
 ```
 
 ### 5.3 ビルド
@@ -206,7 +206,9 @@ ros2 run turtlebot3_dqn dqn_environment
 ```
 
 ### Terminal 4：DQN エージェントノード
-（環境によってコマンドが異なる場合があります。リポジトリ内の `turtlebot3_dqn` の README / launch を参照してください。）
+```bash
+ros2 run turtlebot3_dqn dqn_agent 1 1000
+```
 
 ---
 
@@ -226,6 +228,31 @@ ros2 run turtlebot3_dqn result_graph
 
 ---
 ## 12. Lidarの本数設定
+
+- 対象ファイル  
+  `/turtlebot3_simulations/turtlebot3_gazebo/models/turtlebot3_burger/model.sdf`
+
+必要に応じて **LiDAR のサンプル数を変更（360 → 48）**する。
+
+---
+
+### 概要
+
+状態は環境の観測値であり，ロボットの現在の状況を表す。  
+本システムでは，状態ベクトルの次元数は **26 次元**で構成されており，
+
+- LiDAR（LDS）値：24 次元  
+- ゴールまでの距離：1 次元  
+- ゴールまでの角度：1 次元  
+
+を含む。
+
+LiDAR 値は **前方 180 度の範囲**を使用するため，  
+360 度全体では **48 本の LiDAR サンプル**が必要となる。
+
+TurtleBot3 の LDS（LiDAR Distance Sensor）のデフォルト設定は  
+**360 本**となっているため，以下のファイルを編集して調整する。
+-変更が反映されない場合は再起動をしてください
 
 ## 13. 動的物体が動かないとき（libobstacles.so のトラブルシュート）
 
@@ -472,7 +499,7 @@ def train(self, states, actions, old_logps, returns, advantages):
 
 ## 15. 使用したステージ詳細
 <p align="center">
-  <img src="images/stage1.pdf" width="32%" alt="Stage 1 : Simple Navigation">
+  <img src="images/stage1.png" width="32%" alt="Stage 1 : Simple Navigation">
   <img src="images/stage2.png" width="32%" alt="Stage 2 : Narrow Passage">
   <img src="images/stage3.png" width="32%" alt="Stage 3 : Obstacle Avoidance">
 </p>
@@ -483,7 +510,24 @@ def train(self, states, actions, old_logps, returns, advantages):
   <b>Stage 3</b>：静的障害物回避
 </p>
 
-## 15. 備考
+## 16. PPOの実行手順
+
+以下のファイルを書き換えることで実行可能です．
+
+- `/turtlebot3_ws/src/turtlebot3_machine_learning/turtlebot3_simulations/turtlebot3_gazebo/models/turtlebot3_burger/model.sdf`
+- `/turtlebot3_ws/src/turtlebot3_machine_learning/turtlebot3_dqn/turtlebot3_dqn/dqn_agent.py`
+- `/turtlebot3_ws/src/turtlebot3_machine_learning/turtlebot3_dqn/turtlebot3_dqn/dqn_enviroment.py`
+- `/turtlebot3_ws/src/turtlebot3_machine_learning/turtlebot3_dqn/turtlebot3_dqn/dqn_gazebo.py`
+- `/turtlebot3_ws/src/turtlebot3_msgs/srv/Dqn.srv`
+  
+必要に応じて変更
+
+- `/turtlebot3_ws/src/turtlebot3_machine_learning//turtlebot3_dqn/turtlebot3_dqn/dqn_test.py`
+
+学習手順は以下と同様
+- [10. 学習開始（複数ターミナル）](#10-学習開始複数ターミナル)
+
+## 17. 備考
 
 - 本リポジトリは **シミュレーション環境での学習実行**を目的とする  
 - 実機適用時には別途 TurtleBot3 実機設定が必要  
@@ -491,7 +535,7 @@ def train(self, states, actions, old_logps, returns, advantages):
 
 ---
 
-## 16. 参考資料
+## 18. 参考文献
 
 - ROBOTIS TurtleBot3 Machine Learning  
   https://emanual.robotis.com/docs/en/platform/turtlebot3/machine_learning/
