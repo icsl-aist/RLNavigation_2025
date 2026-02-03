@@ -508,16 +508,19 @@ def train(self, states, actions, old_logps, returns, advantages):
 </p>
 
 ## 16. PPOの実行手順
+
 以下のファイルを書き換えることで実行可能です．
-/turtlebot3_simulations/turtlebot3_gazebo/models/turtlebot3_burger/model.sdf
-/turtlebot3_dqn/turtlebot3_dqn/dqn_agent.py
-/turtlebot3_dqn/turtlebot3_dqn/dqn_enviroment.py
-/turtlebot3_dqn/turtlebot3_dqn/dqn_gazebo.py
 
-必要に応じて
-/turtlebot3_dqn/turtlebot3_dqn/dqn_test.py
+- `/turtlebot3_ws/src/turtlebot3_machine_learning/turtlebot3_simulations/turtlebot3_gazebo/models/turtlebot3_burger/model.sdf- `
+- `/turtlebot3_ws/src/turtlebot3_machine_learning/turtlebot3_dqn/turtlebot3_dqn/dqn_agent.py`
+- `/turtlebot3_ws/src/turtlebot3_machine_learning/turtlebot3_dqn/turtlebot3_dqn/dqn_enviroment.py`
+- `/turtlebot3_ws/src/turtlebot3_machine_learning/turtlebot3_dqn/turtlebot3_dqn/dqn_gazebo.py`
+- `/turtlebot3_ws/src/turtlebot3_msgs/srv/Dqn.srv`
+必要に応じて変更
+- `/turtlebot3_ws/src/turtlebot3_machine_learning//turtlebot3_dqn/turtlebot3_dqn/dqn_test.py`
 
-
+学習手順は以下と同様
+- [10. 学習開始（複数ターミナル）](#10-学習開始複数ターミナル)
 
 ## 17. 備考
 
