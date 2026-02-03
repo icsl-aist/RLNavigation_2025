@@ -23,6 +23,9 @@ TurtleBot3 の機械学習（強化学習: DQN）環境を **Ubuntu 22.04 + ROS 
 - [13. 動的物体が動かないとき（libobstacles.so のトラブルシュート）](#13-動的物体が動かないときlibobstaclesso-のトラブルシュート)
 - [14. PPOプログラム詳細](#14-ppoプログラム詳細)
 - [15. 使用したステージ詳細](#15-使用したステージ詳細)
+- [16. PPOの実行手順](#16-PPOの実行手順)
+- [17.備考](#17-備考)
+- [18. 参考文献](#18-参考文献)
 
 
 
@@ -511,12 +514,14 @@ def train(self, states, actions, old_logps, returns, advantages):
 
 以下のファイルを書き換えることで実行可能です．
 
-- `/turtlebot3_ws/src/turtlebot3_machine_learning/turtlebot3_simulations/turtlebot3_gazebo/models/turtlebot3_burger/model.sdf- `
+- `/turtlebot3_ws/src/turtlebot3_machine_learning/turtlebot3_simulations/turtlebot3_gazebo/models/turtlebot3_burger/model.sdf`
 - `/turtlebot3_ws/src/turtlebot3_machine_learning/turtlebot3_dqn/turtlebot3_dqn/dqn_agent.py`
 - `/turtlebot3_ws/src/turtlebot3_machine_learning/turtlebot3_dqn/turtlebot3_dqn/dqn_enviroment.py`
 - `/turtlebot3_ws/src/turtlebot3_machine_learning/turtlebot3_dqn/turtlebot3_dqn/dqn_gazebo.py`
 - `/turtlebot3_ws/src/turtlebot3_msgs/srv/Dqn.srv`
+  
 必要に応じて変更
+
 - `/turtlebot3_ws/src/turtlebot3_machine_learning//turtlebot3_dqn/turtlebot3_dqn/dqn_test.py`
 
 学習手順は以下と同様
@@ -530,7 +535,7 @@ def train(self, states, actions, old_logps, returns, advantages):
 
 ---
 
-## 18. 参考資料
+## 18. 参考文献
 
 - ROBOTIS TurtleBot3 Machine Learning  
   https://emanual.robotis.com/docs/en/platform/turtlebot3/machine_learning/
