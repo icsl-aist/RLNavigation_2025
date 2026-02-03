@@ -511,8 +511,13 @@ def train(self, states, actions, old_logps, returns, advantages):
 </p>
 
 ## 16. PPOの実行手順
+### PyTorchのインストール
 
-以下のファイルを書き換えることで実行可能です．
+```bash
+pip3 install torch torchvision torchaudio
+```
+
+以下のファイルを書き換え,ビルドすることで実行可能です．
 
 - `/turtlebot3_ws/src/turtlebot3_machine_learning/turtlebot3_simulations/turtlebot3_gazebo/models/turtlebot3_burger/model.sdf`
 - `/turtlebot3_ws/src/turtlebot3_machine_learning/turtlebot3_dqn/turtlebot3_dqn/dqn_agent.py`
