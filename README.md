@@ -206,7 +206,6 @@ ros2 run turtlebot3_dqn dqn_environment
 ```bash
 ros2 run turtlebot3_dqn dqn_agent 1 1000
 ```
-（環境によってコマンドが異なる場合があります。リポジトリ内の `turtlebot3_dqn` の README / launch を参照してください。）
 
 ---
 
@@ -508,7 +507,19 @@ def train(self, states, actions, old_logps, returns, advantages):
   <b>Stage 3</b>：静的障害物回避
 </p>
 
-## 15. 備考
+## 16. PPOの実行手順
+以下のファイルを書き換えることで実行可能です．
+/turtlebot3_simulations/turtlebot3_gazebo/models/turtlebot3_burger/model.sdf
+/turtlebot3_dqn/turtlebot3_dqn/dqn_agent.py
+/turtlebot3_dqn/turtlebot3_dqn/dqn_enviroment.py
+/turtlebot3_dqn/turtlebot3_dqn/dqn_gazebo.py
+
+必要に応じて
+/turtlebot3_dqn/turtlebot3_dqn/dqn_test.py
+
+
+
+## 17. 備考
 
 - 本リポジトリは **シミュレーション環境での学習実行**を目的とする  
 - 実機適用時には別途 TurtleBot3 実機設定が必要  
@@ -516,7 +527,7 @@ def train(self, states, actions, old_logps, returns, advantages):
 
 ---
 
-## 16. 参考資料
+## 18. 参考資料
 
 - ROBOTIS TurtleBot3 Machine Learning  
   https://emanual.robotis.com/docs/en/platform/turtlebot3/machine_learning/
